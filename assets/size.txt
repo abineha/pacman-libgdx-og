@@ -1,0 +1,3 @@
+ready.png: 160 x 112
+sprites.png: 448 x 416 - 32 x 32
+font.png: 944 x 128 - 16 x 16
