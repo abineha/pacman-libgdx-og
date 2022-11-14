@@ -6,12 +6,9 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.mygdx.game.Enums.Direction;
 import com.mygdx.game.MyGdxGame;
-
-import javax.xml.soap.Text;
 
 public class GameScreen implements Screen {
     public static final int FRAME_COLS = 14, FRAME_ROWS = 13;
@@ -95,10 +92,32 @@ public class GameScreen implements Screen {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        animLoop = true;
+
+        // Border checking
+        if(x >= Gdx.graphics.getWidth() - SIZE) {
+            x = Gdx.graphics.getWidth() - SIZE;
+            animLoop = false;
+        }
+        if(x <= 0) {
+            x = 0;
+            animLoop = false;
+        }
+        if(y >= Gdx.graphics.getHeight() - SIZE) {
+            y = Gdx.graphics.getHeight() - SIZE;
+            animLoop = false;
+        }
+        if(y <= 0) {
+            y = 0;
+            animLoop = false;
+        }
+
 
         // Movement code
         x += SPEED * Gdx.graphics.getDeltaTime() * DIRECTION.getxDirection();
         y += SPEED * Gdx.graphics.getDeltaTime() * DIRECTION.getyDirection();
+
+
 
         if(Gdx.input.isKeyJustPressed(Input.Keys.UP)) {
             DIRECTION = Direction.UP;
@@ -122,7 +141,7 @@ public class GameScreen implements Screen {
         // render code
         game.batch.begin();
 
-        game.batch.draw(moveAnimation[frame].getKeyFrame(stateTime, true), x, y, SIZE, SIZE);
+        game.batch.draw(moveAnimation[frame].getKeyFrame(stateTime, animLoop), x, y, SIZE, SIZE);
 
         game.batch.end();
     }
