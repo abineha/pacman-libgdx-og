@@ -4,9 +4,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.maps.tiled.renderers.OrthoCachedTiledMapRenderer;
 import com.mygdx.game.Enums.Direction;
 import com.mygdx.game.MyGdxGame;
 
@@ -15,8 +20,11 @@ public class GameScreen implements Screen {
     public static final float SPEED = 400;
     public static final float ANIMATION_SPEED = 0.06f;
     public static final int SIZE_PIXEL = 16;
-    public static final int SIZE = SIZE_PIXEL * 3;
+    public static final int SIZE = SIZE_PIXEL * 2;
 
+    TiledMap map;
+    TiledMapRenderer mapRenderer;
+    OrthographicCamera camera;
     Direction DIRECTION;
     Animation<TextureRegion>[] moveAnimation;
     Texture texture;
@@ -32,6 +40,14 @@ public class GameScreen implements Screen {
         this.game = game;
         y = 50;
         x = MyGdxGame.WIDTH / 2 - SIZE / 2;
+
+        camera = new OrthographicCamera();
+        camera.setToOrtho(false, 28, 36);
+        camera.update();
+
+        map = new TmxMapLoader().load("map.tmx");
+
+        mapRenderer = new OrthoCachedTiledMapRenderer(map, 1/16f);
 
         texture = new Texture("sprites.png");
 
@@ -91,6 +107,12 @@ public class GameScreen implements Screen {
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        camera.update();
+
+        // rendering map
+        mapRenderer.setView(camera);
+        mapRenderer.render();
 
         animLoop = true;
 
