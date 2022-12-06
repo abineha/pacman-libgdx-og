@@ -13,8 +13,8 @@ import com.mygdx.game.Screens.MainMenuScreen;
 import java.util.ArrayList;
 
 public class MyGdxGame extends Game {
-    public static final int WIDTH = 672;
-    public static final int HEIGHT = 864;
+    public static final int WIDTH = 432;
+    public static final int HEIGHT = 560;
     public static final int SIZE = 32;
     public SpriteBatch batch;
 

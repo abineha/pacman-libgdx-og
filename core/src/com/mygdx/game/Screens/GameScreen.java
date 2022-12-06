@@ -7,24 +7,29 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthoCachedTiledMapRenderer;
 import com.mygdx.game.Enums.Direction;
 import com.mygdx.game.MyGdxGame;
+import java.math.RoundingMode;
 
 public class GameScreen implements Screen {
     public static final int FRAME_COLS = 14, FRAME_ROWS = 13;
-    public static final float SPEED = 400;
+    public static final float SPEED = 50;
     public static final float ANIMATION_SPEED = 0.06f;
-    public static final int SIZE_PIXEL = 16;
-    public static final int SIZE = SIZE_PIXEL * 2;
+    public static final int SIZE_PIXEL = 20;
+    public static final int SIZE = SIZE_PIXEL * 1;
 
     TiledMap map;
+
     TiledMapRenderer mapRenderer;
     OrthographicCamera camera;
+
     Direction DIRECTION;
     Animation<TextureRegion>[] moveAnimation;
     Texture texture;
@@ -33,23 +38,21 @@ public class GameScreen implements Screen {
     float stateTime;
     float x;
     float y;
+    private TiledMapTileLayer collisionLayer;
+    float vx=-1,vy=1;
 
     MyGdxGame game;
 
-    public GameScreen(MyGdxGame game) {
+    public GameScreen(MyGdxGame game,TiledMapTileLayer collisionLayer) {
         this.game = game;
-        y = 50;
-        x = MyGdxGame.WIDTH / 2 - SIZE / 2;
-
-        camera = new OrthographicCamera();
-        camera.setToOrtho(false, 28, 36);
-        camera.update();
-
-        map = new TmxMapLoader().load("map.tmx");
-
-        mapRenderer = new OrthoCachedTiledMapRenderer(map, 1/16f);
-
+        this.collisionLayer=collisionLayer;
+        y = 140;
+        x = 208;
         texture = new Texture("sprites.png");
+
+
+
+
 
         System.out.println(texture.getWidth() + " " + texture.getHeight());
 
@@ -96,11 +99,23 @@ public class GameScreen implements Screen {
         moveAnimation[3] = new Animation<TextureRegion>(ANIMATION_SPEED, moveFramesDOWN);
 
         DIRECTION = Direction.LEFT;
+
+
+
+
     }
 
     @Override
     public void show() {
-        texture = new Texture("badlogic.jpg");
+        map = new TmxMapLoader().load("map.tmx");
+
+        mapRenderer = new OrthoCachedTiledMapRenderer(map, 1/16f);
+
+        camera = new OrthographicCamera();
+        camera.setToOrtho(false, 28, 36);
+        camera.update();
+
+        texture = new Texture("sprites.png");
     }
 
     @Override
@@ -113,6 +128,7 @@ public class GameScreen implements Screen {
         // rendering map
         mapRenderer.setView(camera);
         mapRenderer.render();
+
 
         animLoop = true;
 
@@ -134,28 +150,76 @@ public class GameScreen implements Screen {
             animLoop = false;
         }
 
+        //save old position
+        float oldX,oldY,tileWidth=collisionLayer.getTileWidth(),tileHeight=collisionLayer.getTileHeight() ;
+        boolean collisionX=false,collisionY=false;
 
-        // Movement code
+
+
+        //move on x
+        int s=16;
+
+        oldX=x;
         x += SPEED * Gdx.graphics.getDeltaTime() * DIRECTION.getxDirection();
+        if((vx)<0){
+            //middle left
+
+            collisionX =collisionLayer.getCell((int) (Math.round(x / tileWidth)), (int) (Math.round((y + s / 2) / tileHeight))).getTile().getProperties().containsKey("blocked");
+
+
+
+        }else {
+            // middle right
+
+            collisionX = collisionLayer.getCell((int) (Math.round((x + s) / tileWidth)), (int) (Math.round((y+ s / 2) / tileHeight))).getTile().getProperties().containsKey("blocked");
+
+        }
+
+        //react to x collision
+        if(collisionX){
+            x=oldX;
+        }
+
+        //move on y
+        oldY=y;
         y += SPEED * Gdx.graphics.getDeltaTime() * DIRECTION.getyDirection();
+        if(vy<0){
+            // bottom middle
+            collisionY = collisionLayer.getCell((int) (Math.round((x+ s / 2) / tileWidth)), (int) (Math.round(y / tileHeight))).getTile().getProperties().containsKey("blocked");
 
 
+
+        }else {
+            // top middle
+            collisionY = collisionLayer.getCell((int) (Math.round((x + s/ 2) / tileWidth)), (int) (Math.round((y + s) / tileHeight))).getTile().getProperties().containsKey("blocked");
+
+
+        }
+
+        //react to y collision
+        if(collisionY){
+            y=oldY;
+        }
 
         if(Gdx.input.isKeyJustPressed(Input.Keys.UP)) {
             DIRECTION = Direction.UP;
             frame = 2;
+            vy=1;
         }
         else if(Gdx.input.isKeyJustPressed(Input.Keys.DOWN)) {
             DIRECTION = Direction.DOWN;
             frame = 3;
+            vy=-1;
         }
         else if(Gdx.input.isKeyJustPressed(Input.Keys.RIGHT)) {
             DIRECTION = Direction.RIGHT;
             frame = 0;
+            vx=1;
         }
         else if(Gdx.input.isKeyJustPressed(Input.Keys.LEFT)) {
             DIRECTION = Direction.LEFT;
             frame = 1;
+            vx=-1;
         }
 
         stateTime += delta;
@@ -185,11 +249,13 @@ public class GameScreen implements Screen {
 
     @Override
     public void hide() {
+        dispose();
 
     }
 
     @Override
     public void dispose() {
+        map.dispose();
 
     }
 }
